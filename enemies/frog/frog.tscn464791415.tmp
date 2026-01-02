@@ -1,0 +1,144 @@
+[gd_scene load_steps=13 format=3 uid="uid://dxre65g7ipfcr"]
+
+[ext_resource type="PackedScene" uid="uid://c7ocfnvpduaf0" path="res://enemies/enemy_base/enemy_base.tscn" id="1_q3nbs"]
+[ext_resource type="Texture2D" uid="uid://6wn656rqfdob" path="res://assets/enemies/frog/frog_sheet.png" id="3_tjjot"]
+
+[sub_resource type="GDScript" id="GDScript_6ssue"]
+script/source = "extends EnemyBase
+
+@onready var animated_sprite_2d: AnimatedSprite2D = $AnimatedSprite2D
+@onready var jumper_timer: Timer = $JumperTimer
+
+const JUMP_VELOCITY:Vector2=Vector2(100, - 150)
+const JUMP_WAIT_RANGE:Vector2=Vector2(2.5,5.0)
+var _jump:bool =false
+var _seen_player:bool =false
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	super._ready()
+	start_timer()
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _physics_process(delta: float) -> void:
+	super._physics_process(delta)
+	if is_on_floor()==false:
+		velocity.y+=_gravity*delta
+	else:
+		velocity.x=0
+		animated_sprite_2d.play(\"idle\")
+	apply_jump()
+	move_and_slide()
+	flip_me()
+func apply_jump()->void:
+	if is_on_floor()==false:
+		return
+	if _seen_player==false or _jump==false:
+		return
+	velocity=JUMP_VELOCITY
+	if animated_sprite_2d.flip_h==false:
+		velocity.x =velocity.x *-1
+	_jump=false
+	animated_sprite_2d.play(\"jump\")
+	start_timer()
+func flip_me()->void:
+	if(
+		_player_ref.global_position.x>global_position.x
+		and animated_sprite_2d.flip_h==false):
+		animated_sprite_2d.flip_h=true
+	elif(_player_ref.global_position.x<global_position.x
+		and animated_sprite_2d.flip_h==true):
+		animated_sprite_2d.flip_h=false
+func start_timer()->void:
+	jumper_timer.wait_time=randf_range(JUMP_WAIT_RANGE.x,JUMP_WAIT_RANGE.y)
+	jumper_timer.start()
+func _on_jumper_timer_timeout() -> void:
+	_jump=true # Replace with function body.
+func _on_visible_on_screen_enabler_2d_screen_entered() -> void:
+	_seen_player=true
+"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6612q"]
+atlas = ExtResource("3_tjjot")
+region = Rect2(0, 0, 35, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_rvg6b"]
+atlas = ExtResource("3_tjjot")
+region = Rect2(35, 0, 35, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_s2lbv"]
+atlas = ExtResource("3_tjjot")
+region = Rect2(70, 0, 35, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6i1ca"]
+atlas = ExtResource("3_tjjot")
+region = Rect2(105, 0, 35, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_1wfab"]
+atlas = ExtResource("3_tjjot")
+region = Rect2(140, 0, 35, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tjjot"]
+atlas = ExtResource("3_tjjot")
+region = Rect2(175, 0, 35, 32)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_u8652"]
+atlas = ExtResource("3_tjjot")
+region = Rect2(210, 0, 35, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_u8652"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6612q")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_rvg6b")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_s2lbv")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6i1ca")
+}, {
+"duration": 10.0,
+"texture": SubResource("AtlasTexture_1wfab")
+}],
+"loop": true,
+"name": &"idle",
+"speed": 4.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tjjot")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_u8652")
+}],
+"loop": false,
+"name": &"jump",
+"speed": 2.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_tjjot"]
+radius = 7.0
+
+[node name="Frog" instance=ExtResource("1_q3nbs")]
+script = SubResource("GDScript_6ssue")
+default_facing = null
+points = null
+speed = null
+
+[node name="AnimatedSprite2D" parent="." index="1"]
+scale = Vector2(0.75, 0.75)
+sprite_frames = SubResource("SpriteFrames_u8652")
+animation = &"idle"
+autoplay = "idle"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." index="2"]
+position = Vector2(-1, 1)
+shape = SubResource("CircleShape2D_tjjot")
+
+[node name="JumperTimer" type="Timer" parent="." index="3"]
+
+[connection signal="timeout" from="JumperTimer" to="." method="_on_jumper_timer_timeout"]

@@ -1,0 +1,106 @@
+[gd_scene load_steps=10 format=3 uid="uid://c4m0uqjlyxlxa"]
+
+[ext_resource type="PackedScene" uid="uid://c7ocfnvpduaf0" path="res://enemies/enemy_base/enemy_base.tscn" id="1_o13u3"]
+[ext_resource type="Texture2D" uid="uid://legkx5fvohmq" path="res://assets/enemies/eagle/eagle-attack.png" id="2_w6gfs"]
+
+[sub_resource type="GDScript" id="GDScript_w6gfs"]
+script/source = "extends EnemyBase
+
+@onready var changing_timer: Timer = $ChangingTimer
+@onready var player_detect: RayCast2D = $PlayerDetect
+@onready var animated_sprite_2d: AnimatedSprite2D = $AnimatedSprite2D
+
+const FLY_SPEED:Vector2=Vector2(35,15)
+var _fly_direction:Vector2=Vector2.ZERO
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _physics_process(delta: float) -> void:
+	super._physics_process(delta)
+	velocity=_fly_direction
+	move_and_slide()
+
+func set_direction()->void:
+	var dir_x = sign(_player_ref.global_position.x-global_position.x)
+	if dir_x>0:
+		animated_sprite_2d.flip_h=true
+	else:
+		animated_sprite_2d.flip_h=false
+		_fly_direction=Vector2(dir_x,1)*FLY_SPEED
+	
+func fly_to_player()->void:
+	set_direction()
+	changing_timer.start()
+	
+func _on_visible_on_screen_enabler_2d_screen_entered() -> void:
+	animated_sprite_2d.play(\"fly\")
+	fly_to_player()
+
+ 
+func _on_changing_timer_timeout() -> void:
+	fly_to_player()
+"
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5jit5"]
+atlas = ExtResource("2_w6gfs")
+region = Rect2(0, 0, 40, 41)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5in7c"]
+atlas = ExtResource("2_w6gfs")
+region = Rect2(40, 0, 40, 41)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vuwld"]
+atlas = ExtResource("2_w6gfs")
+region = Rect2(80, 0, 40, 41)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_al20m"]
+atlas = ExtResource("2_w6gfs")
+region = Rect2(120, 0, 40, 41)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_13hg0"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5jit5")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5in7c")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_vuwld")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_al20m")
+}],
+"loop": true,
+"name": &"fly",
+"speed": 8.0
+}]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_w6gfs"]
+radius = 6.0827627
+
+[node name="Eagle" instance=ExtResource("1_o13u3")]
+scale = Vector2(0.75, 0.75)
+collision_mask = 0
+script = SubResource("GDScript_w6gfs")
+
+[node name="VisibleOnScreenEnabler2D" parent="." index="0"]
+position = Vector2(-221.33334, 324.00003)
+rotation = 0.6081613
+scale = Vector2(2.288608, 1.667528)
+rect = Rect2(-87.9171, -325.62305, 170.58377, 186.95638)
+
+[node name="AnimatedSprite2D" parent="." index="1"]
+sprite_frames = SubResource("SpriteFrames_13hg0")
+animation = &"fly"
+
+[node name="ChangingTimer" type="Timer" parent="." index="2"]
+wait_time = 4.0
+
+[node name="PlayerDetect" type="RayCast2D" parent="." index="3"]
+target_position = Vector2(-1.3333334, 113.333336)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." index="4"]
+shape = SubResource("CircleShape2D_w6gfs")
+
+[connection signal="timeout" from="ChangingTimer" to="." method="_on_changing_timer_timeout"]

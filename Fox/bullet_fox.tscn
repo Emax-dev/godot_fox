@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3 uid="uid://c1s5vmtohjeo8"]
+
+[ext_resource type="PackedScene" uid="uid://dg2fqv8foruoj" path="res://Fox/bullet.tscn" id="1_twvwu"]
+[ext_resource type="Texture2D" uid="uid://dvvclgk5dvqke" path="res://assets/items/bullet1.png" id="2_cfst1"]
+
+[node name="BulletFox" instance=ExtResource("1_twvwu")]
+
+[node name="Sprite2D" parent="." index="0"]
+texture = ExtResource("2_cfst1")

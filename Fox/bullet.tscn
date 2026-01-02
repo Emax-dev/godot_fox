@@ -1,0 +1,44 @@
+[gd_scene load_steps=3 format=3 uid="uid://dg2fqv8foruoj"]
+
+[sub_resource type="GDScript" id="GDScript_0joqa"]
+script/source = "extends Area2D
+
+
+var speed:float =20.0
+var _direction:Vector2=Vector2.RIGHT
+var _life_span:float =20.0
+var _life_time:float
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta: float) -> void:
+	_life_time+=delta
+	if _life_time>_life_span:
+		queue_free()
+	position+=_direction*delta
+func setup(direction:Vector2,life_span:float,speed:float)->void:
+	_direction=direction.normalized()*speed
+	_life_span=life_span
+func _on_area_entered(area: Area2D) -> void:
+	queue_free() # Replace with function body.
+"
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_paw88"]
+radius = 7.0
+
+[node name="bullet" type="Area2D"]
+collision_layer = 0
+collision_mask = 0
+script = SubResource("GDScript_0joqa")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(0.5, 0.5)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+scale = Vector2(0.5, 0.5)
+shape = SubResource("CircleShape2D_paw88")
+
+[connection signal="area_entered" from="." to="." method="_on_area_entered"]
