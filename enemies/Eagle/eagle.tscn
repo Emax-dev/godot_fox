@@ -12,35 +12,52 @@ script/source = "extends EnemyBase
 @onready var animated_sprite_2d: AnimatedSprite2D = $AnimatedSprite2D
 @onready var shooting: Node2D = $Shooting
 
-const FLY_SPEED:Vector2=Vector2(35,15)
-var _fly_direction:Vector2=Vector2.ZERO
+const FLY_SPEED: Vector2 = Vector2(35, 15)
+var _fly_direction: Vector2 = Vector2.ZERO
+var can_shoot: bool = true
+var is_player_detected: bool = false
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _physics_process(delta: float) -> void:
 	super._physics_process(delta)
-	velocity=_fly_direction
+	velocity = _fly_direction
 	move_and_slide()
-	shoot()
-func set_direction()->void:
-	var dir_x = sign(_player_ref.global_position.x-global_position.x)
-	if dir_x>0:
-		animated_sprite_2d.flip_h=true
-	else:
-		animated_sprite_2d.flip_h=false
-	_fly_direction=Vector2(dir_x,1)*FLY_SPEED
-func shoot()->void:
-	var target:Vector2=global_position.direction_to(_player_ref.global_position)
-	if player_detect.is_colliding()==true:
+	
+	# Check if player is detected
+	is_player_detected = player_detect.is_colliding()
+	
+	# Shoot if player is detected and we can shoot
+	if is_player_detected and can_shoot:
+		shoot()
+
+func set_direction() -> void:
+	if _player_ref:
+		var dir_x = sign(_player_ref.global_position.x - global_position.x)
+		if dir_x > 0:
+			animated_sprite_2d.flip_h = true
+		else:
+			animated_sprite_2d.flip_h = false
+		_fly_direction = Vector2(dir_x, 1) * FLY_SPEED
+
+func shoot() -> void:
+	if _player_ref:
+		var target: Vector2 = global_position.direction_to(_player_ref.global_position)
 		shooting.shoot(target)
-func fly_to_player()->void:
+		can_shoot = false  # Prevent shooting
+		# Start 1-second cooldown timer
+		get_tree().create_timer(1.0).timeout.connect(_on_shoot_cooldown_timeout, CONNECT_ONE_SHOT)
+
+func _on_shoot_cooldown_timeout() -> void:
+	can_shoot = true  # Allow shooting again
+
+func fly_to_player() -> void:
 	set_direction()
 	changing_timer.start()
-	
+
 func _on_visible_on_screen_enabler_2d_screen_entered() -> void:
 	animated_sprite_2d.play(\"fly\")
 	fly_to_player()
 
- 
 func _on_changing_timer_timeout() -> void:
 	fly_to_player()
 "
@@ -127,6 +144,6 @@ shape = SubResource("CapsuleShape2D_w6gfs")
 Bullet_key = 1
 speed = 120.0
 life_span = 20.0
-shooting_delay = 0.5
+shooting_delay = 5
 
 [connection signal="timeout" from="ChangingTimer" to="." method="_on_changing_timer_timeout"]
